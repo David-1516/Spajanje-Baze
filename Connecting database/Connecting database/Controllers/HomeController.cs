@@ -1,9 +1,9 @@
 ﻿using Connecting_database.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using Collage.Service;
 using System;
 using Npgsql;
+using Collage.Service;
 
 
 namespace Connecting_database.Controllers
