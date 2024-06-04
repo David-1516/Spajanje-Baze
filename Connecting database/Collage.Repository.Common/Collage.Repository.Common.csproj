@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Collage.Model\Collage.Model.csproj" />
+    <ProjectReference Include="..\Repository\Collage.Repository.csproj" />
+  </ItemGroup>
+
 </Project>
