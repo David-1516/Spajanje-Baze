@@ -13,9 +13,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Collage.Common\Collage.Common.csproj" />
     <ProjectReference Include="..\Collage.Model\Collage.Model.csproj" />
     <ProjectReference Include="..\Collage.Service\Collage.Service.csproj" />
-    <ProjectReference Include="..\Repository\Collage.Repository.csproj" />
   </ItemGroup>
 
 </Project>
