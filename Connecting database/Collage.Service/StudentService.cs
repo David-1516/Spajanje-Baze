@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Collage.Common;
 using Collage.Repository.Interface;
 using Connecting_database.Models;
 
@@ -34,6 +35,10 @@ namespace Collage.Service
         public async Task DeleteStudentAsync(int studentId)
         {
             await _studentRepository.DeleteStudentAsync(studentId);
+        }
+        public async Task<IEnumerable<Student>> GetStudentsAsync(Filtering filtering, Sorting sorting, Paging paging)
+        {
+            return await _studentRepository.GetStudentsAsync(filtering, sorting, paging);
         }
     }
 }

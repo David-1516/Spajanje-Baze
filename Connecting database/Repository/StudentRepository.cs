@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Text;
 using System.Threading.Tasks;
+using Collage.Common;
 using Collage.Repository.Interface;
 using Connecting_database.Models;
 using Npgsql;
@@ -209,6 +211,96 @@ namespace Collage.Repository
                     {
                         await transaction.RollbackAsync();
                         throw;
+                    }
+                }
+            }
+        }
+
+        public async Task<IEnumerable<Student>> GetStudentsAsync(Filtering filtering, Sorting sorting, Paging paging)
+        {
+            using (var connection = new NpgsqlConnection(_connectionString))
+            {
+                await connection.OpenAsync();
+
+                var queryBuilder = new StringBuilder();
+                queryBuilder.AppendLine("SELECT s.Id, s.Name, s.Surname, s.Age, s.DateCreated");
+                queryBuilder.AppendLine("FROM Student s");
+                queryBuilder.AppendLine("WHERE 1=1");
+
+                if (filtering != null)
+                {
+                    if (filtering.StudentId > 0)
+                    {
+                        queryBuilder.AppendLine("AND s.Id = @StudentId");
+                    }
+                    if (!string.IsNullOrEmpty(filtering.SearchQery))
+                    {
+                        queryBuilder.AppendLine("AND (s.Name ILIKE @SearchQery OR s.Surname ILIKE @SearchQery)");
+                    }
+                    if (filtering.FromDate != DateTime.MinValue && filtering.ToDate != DateTime.MinValue)
+                    {
+                        queryBuilder.AppendLine("AND s.DateCreated BETWEEN @FromDate AND @ToDate");
+                    }
+                }
+
+                if (sorting != null)
+                {
+                    queryBuilder.AppendLine($"ORDER BY {sorting.OrderBy} {sorting.SortOrder}");
+                }
+
+                if (paging != null)
+                {
+                    queryBuilder.AppendLine("LIMIT @RppPageSize OFFSET @Offset");
+                }
+
+                string query;
+                using (var reader = new StringReader(queryBuilder.ToString()))
+                {
+                    query = reader.ReadToEnd();
+                }
+
+                using (var command = new NpgsqlCommand(query, connection))
+                {
+                    if (filtering != null)
+                    {
+                        if (filtering.StudentId > 0)
+                        {
+                            command.Parameters.AddWithValue("@StudentId", filtering.StudentId);
+                        }
+                        if (!string.IsNullOrEmpty(filtering.SearchQery))
+                        {
+                            command.Parameters.AddWithValue("@SearchQery", $"%{filtering.SearchQery}%");
+                        }
+                        if (filtering.FromDate != DateTime.MinValue && filtering.ToDate != DateTime.MinValue)
+                        {
+                            command.Parameters.AddWithValue("@FromDate", filtering.FromDate);
+                            command.Parameters.AddWithValue("@ToDate", filtering.ToDate);
+                        }
+                    }
+
+                    if (paging != null)
+                    {
+                        command.Parameters.AddWithValue("@RppPageSize", paging.RppPageSize);
+                        command.Parameters.AddWithValue("@Offset", (paging.PageNumber - 1) * paging.RppPageSize);
+                    }
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        var students = new List<Student>();
+
+                        while (await reader.ReadAsync())
+                        {
+                            students.Add(new Student
+                            {
+                                Id = reader.GetInt32(0),
+                                Name = reader.GetString(1),
+                                Surname = reader.GetString(2),
+                                Age = reader.GetString(3),
+                                DateCreated = reader.GetDateTime(4)
+                            });
+                        }
+
+                        return students;
                     }
                 }
             }
