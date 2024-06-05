@@ -34,9 +34,9 @@ namespace Collage.Repository
 
                         using (var studentCommand = new NpgsqlCommand(studentQuery, connection))
                         {
-                            studentCommand.Parameters.AddWithValue("@Name", student.Name);
-                            studentCommand.Parameters.AddWithValue("@Surname", student.Surname);
-                            studentCommand.Parameters.AddWithValue("@Age", student.Age);
+                            studentCommand.Parameters.AddWithValue("@Name", student.Name is null);
+                            studentCommand.Parameters.AddWithValue("@Surname", student.Surname is null);
+                            studentCommand.Parameters.AddWithValue("@Age", student.Age is null );
                             studentCommand.Parameters.AddWithValue("@DateCreated", student.DateCreated);
 
                             var studentId = (int)await studentCommand.ExecuteScalarAsync();
@@ -153,9 +153,9 @@ namespace Collage.Repository
 
                         using (var studentCommand = new NpgsqlCommand(studentQuery, connection))
                         {
-                            studentCommand.Parameters.AddWithValue("@Name", student.Name);
-                            studentCommand.Parameters.AddWithValue("@Surname", student.Surname);
-                            studentCommand.Parameters.AddWithValue("@Age", student.Age);
+                            studentCommand.Parameters.AddWithValue("@Name", student.Name is null);
+                            studentCommand.Parameters.AddWithValue("@Surname", student.Surname is null);
+                            studentCommand.Parameters.AddWithValue("@Age", student.Age is null);
                             studentCommand.Parameters.AddWithValue("@DateCreated", student.DateCreated);
                             studentCommand.Parameters.AddWithValue("@Id", student.Id);
 
@@ -273,8 +273,8 @@ namespace Collage.Repository
                         }
                         if (filtering.FromDate != DateTime.MinValue && filtering.ToDate != DateTime.MinValue)
                         {
-                            command.Parameters.AddWithValue("@FromDate", filtering.FromDate);
-                            command.Parameters.AddWithValue("@ToDate", filtering.ToDate);
+                            command.Parameters.AddWithValue("@FromDate", filtering.FromDate is null);
+                            command.Parameters.AddWithValue("@ToDate", filtering.ToDate is null);
                         }
                     }
 

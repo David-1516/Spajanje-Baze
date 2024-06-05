@@ -8,8 +8,8 @@ namespace Collage.Common
 {
     public class Sorting
     {
-        public string SortOrder { get; set; }
-        public string  OrderBy { get; set; }
+        public string? SortOrder { get; set; }
+        public string?  OrderBy { get; set; }
 
     }
 }
