@@ -1,17 +1,15 @@
-﻿using Connecting_database.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Connecting_database.Models;
 
 namespace Collage.Repository.Interface
 {
-    internal interface IStudentRepository
+    public interface IStudentRepository
     {
-        int CreateStudent(Student student);
-        Student GetStudentById(int studentId);
-        void UpdateStudent(Student student);
-        void DeleteStudent(int studentId);
+        Task<int> CreateStudentAsync(Student student);
+        Task AddStudentMajorsAsync(int studentId, int[] majorIds);
+        Task<Student> GetStudentByIdAsync(int studentId);
+        Task UpdateStudentAsync(Student student, int[] majorIds);
+        Task DeleteStudentAsync(int studentId);
     }
 }

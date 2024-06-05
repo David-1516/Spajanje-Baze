@@ -1,61 +1,39 @@
-﻿using Collage.Repository;
+﻿using System;
+using System.Threading.Tasks;
 using Collage.Repository.Interface;
 using Connecting_database.Models;
-using System.Collections.Generic;
 
 namespace Collage.Service
 {
     public class StudentService
     {
-        private readonly StudentRepository _studentRepository;
+        private readonly IStudentRepository _studentRepository;
 
-        public StudentService(StudentRepository studentRepository)
+        public StudentService(IStudentRepository studentRepository)
         {
             _studentRepository = studentRepository;
         }
 
-        public int CreateStudent(Student student, int[] majorIds)
+        public async Task<int> CreateStudentAsync(Student student, int[] majorIds)
         {
-            int studentId = _studentRepository.CreateStudent(student);
-
-            foreach (var majorId in majorIds)
-            {
-                var studentMajor = new StudentMajor
-                {
-                    StudentId = studentId,
-                    MajorId = majorId
-                };
-
-                // Add logic to insert into StudentMajor table
-            }
-
+            int studentId = await _studentRepository.CreateStudentAsync(student);
+            await _studentRepository.AddStudentMajorsAsync(studentId, majorIds);
             return studentId;
         }
 
-        public Student GetStudentById(int studentId)
+        public async Task<Student> GetStudentByIdAsync(int studentId)
         {
-            return _studentRepository.GetStudentById(studentId);
+            return await _studentRepository.GetStudentByIdAsync(studentId);
         }
 
-        public void UpdateStudent(Student student, int[] majorIds)
+        public async Task UpdateStudentAsync(Student student, int[] majorIds)
         {
-            _studentRepository.UpdateStudent(student);
-
-            foreach (var majorId in majorIds)
-            {
-                var studentMajor = new StudentMajor
-                {
-                    StudentId = student.Id,
-                    MajorId = majorId
-                };
-
-                // Add logic to update StudentMajor table
-            }
+            await _studentRepository.UpdateStudentAsync(student, majorIds);
         }
 
-        public void DeleteStudent(int studentId)
+        public async Task DeleteStudentAsync(int studentId)
         {
-            _studentRepository.DeleteStudent(studentId);
+            await _studentRepository.DeleteStudentAsync(studentId);
         }
     }
 }
