@@ -1,28 +1,39 @@
+using Autofac;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Configuration;
-using Collage.Repository.Interface;
 using Collage.Repository;
+using Collage.Repository.Interface;
 using Collage.Service;
+using Autofac.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
 builder.Services.AddControllers();
 builder.Configuration.AddJsonFile("appsettings.json");
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-// Register the repository interface and implementation
-builder.Services.AddTransient<IStudentRepository>(provider =>
-    new StudentRepository(connectionString));
 
-// Register the service
-builder.Services.AddTransient<StudentService>();
+builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
+
+
+builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
+{
+    containerBuilder.RegisterType<StudentRepository>().As<IStudentRepository>()
+        .WithParameter("connectionString", connectionString)
+        .InstancePerLifetimeScope();
+
+    containerBuilder.RegisterType<StudentService>().InstancePerLifetimeScope();
+});
 
 var app = builder.Build();
+
 
 if (app.Environment.IsDevelopment())
 {
