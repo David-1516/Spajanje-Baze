@@ -11,8 +11,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Collage.Common\Collage.Common.csproj" />
-    <ProjectReference Include="..\Collage.Model\Collage.Model.csproj" />
+    <ProjectReference Include="..\Collage.Common\College.Common.csproj" />
+    <ProjectReference Include="..\Collage.Model\College.Model.csproj" />
   </ItemGroup>
 
 </Project>

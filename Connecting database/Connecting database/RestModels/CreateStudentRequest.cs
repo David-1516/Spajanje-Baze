@@ -6,6 +6,6 @@
         public string? Surname { get; set; }
         public string? Age { get; set; }
         public DateTime? DateCreated { get; set; }
-        public int[] MajorIds { get; set; }
+        public int[]? MajorIds { get; set; }
     }
 }

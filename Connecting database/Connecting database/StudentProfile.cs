@@ -2,9 +2,9 @@
 using Connecting_database.Models;
 using Connecting_database.RestModels;
 
-public class MappingProfile : Profile
+public class StudentProfile : Profile
 {
-    public MappingProfile()
+    public StudentProfile()
     {
         CreateMap<Student, StudentDto>().ReverseMap();
         CreateMap<Major, MajorDto>().ReverseMap();

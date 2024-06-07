@@ -3,19 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.34916.146
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Collage.WebApi", "Connecting database\Collage.WebApi.csproj", "{9536F4DF-7F97-4426-A11E-653909D5DF27}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "College.WebApi", "Connecting database\College.WebApi.csproj", "{9536F4DF-7F97-4426-A11E-653909D5DF27}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Collage.Service", "Collage.Service\Collage.Service.csproj", "{3AB3CA30-D07D-498C-880D-22DF2568EAA5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "College.Service", "Collage.Service\College.Service.csproj", "{3AB3CA30-D07D-498C-880D-22DF2568EAA5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Collage.Repository", "Repository\Collage.Repository.csproj", "{EB348A03-2A23-4BEB-B0BA-26037D16F317}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "College.Repository", "Repository\College.Repository.csproj", "{EB348A03-2A23-4BEB-B0BA-26037D16F317}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Collage.Repository.Common", "Collage.Repository.Common\Collage.Repository.Common.csproj", "{0A9DABE0-E126-493A-A4A2-4C48F8F651EB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "College.Repository.Common", "Collage.Repository.Common\College.Repository.Common.csproj", "{0A9DABE0-E126-493A-A4A2-4C48F8F651EB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Colllage.Service.Common", "Colllage.Service.Common\Colllage.Service.Common.csproj", "{F8AE1E2F-3ADD-4722-B75A-098DEE03CC7E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "College.Service.Common", "Colllage.Service.Common\College.Service.Common.csproj", "{F8AE1E2F-3ADD-4722-B75A-098DEE03CC7E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Collage.Common", "Collage.Common\Collage.Common.csproj", "{A1D32676-5817-426F-86C8-0D288DFD9686}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "College.Common", "Collage.Common\College.Common.csproj", "{A1D32676-5817-426F-86C8-0D288DFD9686}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Collage.Model", "Collage.Model\Collage.Model.csproj", "{7550FD11-D378-4AB6-87DB-9C741E7CE43E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "College.Model", "Collage.Model\College.Model.csproj", "{7550FD11-D378-4AB6-87DB-9C741E7CE43E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

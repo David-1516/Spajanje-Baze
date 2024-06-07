@@ -10,14 +10,15 @@
   <ItemGroup>
     <PackageReference Include="Autofac" Version="8.0.0" />
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="9.0.0" />
+    <PackageReference Include="AutoMapper" Version="13.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Collage.Common\Collage.Common.csproj" />
-    <ProjectReference Include="..\Collage.Model\Collage.Model.csproj" />
-    <ProjectReference Include="..\Collage.Service\Collage.Service.csproj" />
+    <ProjectReference Include="..\Collage.Common\College.Common.csproj" />
+    <ProjectReference Include="..\Collage.Model\College.Model.csproj" />
+    <ProjectReference Include="..\Collage.Service\College.Service.csproj" />
   </ItemGroup>
 
 </Project>
