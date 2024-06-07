@@ -32,7 +32,7 @@ namespace Collage.Repository
                     command.Parameters.AddWithValue("@Name", student.Name is null);
                     command.Parameters.AddWithValue("@Surname", student.Surname is null);
                     command.Parameters.AddWithValue("@Age", student.Age is null);
-                    command.Parameters.AddWithValue("@DateCreated", student.DateCreated);
+                    command.Parameters.AddWithValue("@DateCreated", student.DateCreated.HasValue ? (object)student.DateCreated.Value : DBNull.Value);
                     studentId = (int)await command.ExecuteScalarAsync();
                 }
             }
@@ -90,7 +90,7 @@ namespace Collage.Repository
                         command.Parameters.AddWithValue("@Name", student.Name is null);
                         command.Parameters.AddWithValue("@Surname", student.Surname is null);
                         command.Parameters.AddWithValue("@Age", student.Age is null);
-                        command.Parameters.AddWithValue("@DateCreated", student.DateCreated);
+                        command.Parameters.AddWithValue("@DateCreated", student.DateCreated.HasValue ? (object)student.DateCreated.Value : DBNull.Value);
                         command.Parameters.AddWithValue("@Id", student.Id);
                         await command.ExecuteNonQueryAsync();
                     }

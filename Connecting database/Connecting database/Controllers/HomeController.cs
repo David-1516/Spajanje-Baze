@@ -1,58 +1,35 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using AutoMapper;
 using Connecting_database.Models;
-using Collage.Common;
+using Connecting_database.RestModels;
+using Microsoft.AspNetCore.Mvc;
 using Collage.Service;
 
-namespace Collage.WebApi.Controllers
+namespace Connecting_database.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     public class HomeController : ControllerBase
     {
         private readonly IStudentService _studentService;
+        private readonly IMapper _mapper;
 
-        public HomeController(IStudentService studentService)
+        public HomeController(IStudentService studentService, IMapper mapper)
         {
             _studentService = studentService;
+            _mapper = mapper;
         }
 
-        [HttpGet("students")]
-        public async Task<IActionResult> GetStudents([FromQuery] int studentId, [FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate, [FromQuery] string searchQuery, [FromQuery] string sortOrder, [FromQuery] string orderBy, [FromQuery] int pageNumber, [FromQuery] int pageSize)
+        [HttpPost]
+        [Route("CreateStudent")]
+        public async Task<IActionResult> CreateStudent([FromBody] CreateStudentRequest request)
         {
-            var filtering = new Filtering
-            {
-                StudentId = studentId,
-                FromDate = fromDate,
-                ToDate = toDate,
-                SearchQuery = searchQuery
-            };
-
-            var sorting = new Sorting
-            {
-                SortOrder = sortOrder,
-                OrderBy = orderBy
-            };
-
-            var paging = new Paging
-            {
-                PageNumber = pageNumber,
-                RppPageSize = pageSize
-            };
-
-            var students = await _studentService.GetStudentsAsync(filtering, sorting, paging);
-            return Ok(students);
+            var student = _mapper.Map<Student>(request);
+            await _studentService.CreateStudentAsync(student, request.MajorIds);
+            return Ok();
         }
 
-        [HttpPost("student")]
-        public async Task<IActionResult> CreateStudent([FromBody] Student student, [FromQuery] int[] majorIds)
-        {
-            await _studentService.CreateStudentAsync(student, majorIds);
-            return CreatedAtAction(nameof(GetStudent), new { studentId = student.Id }, student);
-        }
-
-        [HttpGet("student/{studentId}")]
+        [HttpGet]
+        [Route("GetStudent")]
         public async Task<IActionResult> GetStudent(int studentId)
         {
             var student = await _studentService.GetStudentAsync(studentId);
@@ -60,27 +37,25 @@ namespace Collage.WebApi.Controllers
             {
                 return NotFound();
             }
-
-            return Ok(student);
+            var studentDto = _mapper.Map<StudentDto>(student);
+            return Ok(studentDto);
         }
 
-        [HttpPut("student/{studentId}")]
-        public async Task<IActionResult> UpdateStudent(int studentId, [FromBody] Student student, [FromQuery] int[] majorIds)
+        [HttpPut]
+        [Route("UpdateStudent")]
+        public async Task<IActionResult> UpdateStudent([FromBody] UpdateStudentRequest request)
         {
-            if (studentId != student.Id)
-            {
-                return BadRequest();
-            }
-
-            await _studentService.UpdateStudentAsync(student, majorIds);
-            return NoContent();
+            var student = _mapper.Map<Student>(request);
+            await _studentService.UpdateStudentAsync(student, request.MajorIds);
+            return Ok("Student updated successfully.");
         }
 
-        [HttpDelete("student/{studentId}")]
+        [HttpDelete]
+        [Route("DeleteStudent")]
         public async Task<IActionResult> DeleteStudent(int studentId)
         {
             await _studentService.DeleteStudentAsync(studentId);
-            return NoContent();
+            return Ok("Student deleted successfully.");
         }
     }
 }
