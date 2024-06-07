@@ -7,8 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Collage.Model\Collage.Model.csproj" />
-    <ProjectReference Include="..\Repository\Collage.Repository.csproj" />
+    <ProjectReference Include="..\Collage.Model\College.Model.csproj" />
+    <ProjectReference Include="..\Repository\College.Repository.csproj" />
   </ItemGroup>
 
 </Project>

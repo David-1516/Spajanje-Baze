@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Text;
-using System.Threading.Tasks;
-using Collage.Common;
+﻿using Collage.Common;
 using Collage.Repository.Interface;
 using Connecting_database.Models;
 using Npgsql;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Collage.Repository
 {
@@ -21,83 +18,37 @@ namespace Collage.Repository
 
         public async Task<int> CreateStudentAsync(Student student)
         {
+            int studentId;
             using (var connection = new NpgsqlConnection(_connectionString))
             {
                 await connection.OpenAsync();
-                using (var transaction = await connection.BeginTransactionAsync())
+
+                var query = @"INSERT INTO Student (Name, Surname, Age, DateCreated) 
+                              VALUES (@Name, @Surname, @Age, @DateCreated) 
+                              RETURNING Id";
+
+                using (var command = new NpgsqlCommand(query, connection))
                 {
-                    try
-                    {
-                        string studentQuery = @"INSERT INTO Student (Name, Surname, Age, DateCreated) 
-                                                VALUES (@Name, @Surname, @Age, @DateCreated)
-                                                RETURNING Id";
-
-                        using (var studentCommand = new NpgsqlCommand(studentQuery, connection))
-                        {
-                            studentCommand.Parameters.AddWithValue("@Name", student.Name is null);
-                            studentCommand.Parameters.AddWithValue("@Surname", student.Surname is null);
-                            studentCommand.Parameters.AddWithValue("@Age", student.Age is null );
-                            studentCommand.Parameters.AddWithValue("@DateCreated", student.DateCreated);
-
-                            var studentId = (int)await studentCommand.ExecuteScalarAsync();
-                            await transaction.CommitAsync();
-                            return studentId;
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        await transaction.RollbackAsync();
-                        throw;
-                    }
+                    command.Parameters.AddWithValue("@Name", student.Name is null);
+                    command.Parameters.AddWithValue("@Surname", student.Surname is null);
+                    command.Parameters.AddWithValue("@Age", student.Age is null);
+                    command.Parameters.AddWithValue("@DateCreated", student.DateCreated.HasValue ? (object)student.DateCreated.Value : DBNull.Value);
+                    studentId = (int)await command.ExecuteScalarAsync();
                 }
             }
-        }
 
-        public async Task AddStudentMajorsAsync(int studentId, int[] majorIds)
-        {
-            using (var connection = new NpgsqlConnection(_connectionString))
-            {
-                await connection.OpenAsync();
-                using (var transaction = await connection.BeginTransactionAsync())
-                {
-                    try
-                    {
-                        foreach (var majorId in majorIds)
-                        {
-                            string studentMajorQuery = @"INSERT INTO StudentMajor (StudentId, MajorId) 
-                                                         VALUES (@StudentId, @MajorId)";
-
-                            using (var studentMajorCommand = new NpgsqlCommand(studentMajorQuery, connection))
-                            {
-                                studentMajorCommand.Parameters.AddWithValue("@StudentId", studentId);
-                                studentMajorCommand.Parameters.AddWithValue("@MajorId", majorId);
-                                await studentMajorCommand.ExecuteNonQueryAsync();
-                            }
-                        }
-
-                        await transaction.CommitAsync();
-                    }
-                    catch (Exception)
-                    {
-                        await transaction.RollbackAsync();
-                        throw;
-                    }
-                }
-            }
+            return studentId;
         }
 
         public async Task<Student> GetStudentByIdAsync(int studentId)
         {
+            Student student = null;
             using (var connection = new NpgsqlConnection(_connectionString))
             {
                 await connection.OpenAsync();
-                string query = @"
-                    SELECT s.Id, s.Name, s.Surname, s.Age, s.DateCreated, 
-                           m.Id as MajorId, m.Subject, m.Teacher
-                    FROM Student s
-                    LEFT JOIN StudentMajor sm ON s.Id = sm.StudentId
-                    LEFT JOIN Major m ON sm.MajorId = m.Id
-                    WHERE s.Id = @StudentId";
+
+                var query = @"SELECT Id, Name, Surname, Age, DateCreated 
+                              FROM Student WHERE Id = @StudentId";
 
                 using (var command = new NpgsqlCommand(query, connection))
                 {
@@ -105,37 +56,22 @@ namespace Collage.Repository
 
                     using (var reader = await command.ExecuteReaderAsync())
                     {
-                        var student = new Student();
-                        var majors = new List<Major>();
-
-                        while (await reader.ReadAsync())
+                        if (await reader.ReadAsync())
                         {
-                            if (student.Id == 0)
+                            student = new Student
                             {
-                                student.Id = reader.GetInt32(0);
-                                student.Name = reader.GetString(1);
-                                student.Surname = reader.GetString(2);
-                                student.Age = reader.GetString(3);
-                                student.DateCreated = reader.GetDateTime(4);
-                            }
-
-                            if (!reader.IsDBNull(5))
-                            {
-                                var major = new Major
-                                {
-                                    Id = reader.GetInt32(5),
-                                    Subject = reader.GetString(6),
-                                    Teacher = reader.GetString(7)
-                                };
-                                majors.Add(major);
-                            }
+                                Id = reader.GetInt32(0),
+                                Name = reader.GetString(1),
+                                Surname = reader.GetString(2),
+                                Age = reader.GetString(3),
+                                DateCreated = reader.GetDateTime(4)
+                            };
                         }
-
-                        student.StudentMajors = majors.Select(m => new StudentMajor { Major = m, MajorId = m.Id, StudentId = student.Id, Student = student }).ToList();
-                        return student;
                     }
                 }
             }
+
+            return student;
         }
 
         public async Task UpdateStudentAsync(Student student, int[] majorIds)
@@ -145,39 +81,30 @@ namespace Collage.Repository
                 await connection.OpenAsync();
                 using (var transaction = await connection.BeginTransactionAsync())
                 {
-                    try
+                    var query = @"UPDATE Student 
+                                  SET Name = @Name, Surname = @Surname, Age = @Age, DateCreated = @DateCreated 
+                                  WHERE Id = @Id";
+
+                    using (var command = new NpgsqlCommand(query, connection))
                     {
-                        string studentQuery = @"UPDATE Student 
-                                                SET Name = @Name, Surname = @Surname, Age = @Age, DateCreated = @DateCreated 
-                                                WHERE Id = @Id";
-
-                        using (var studentCommand = new NpgsqlCommand(studentQuery, connection))
-                        {
-                            studentCommand.Parameters.AddWithValue("@Name", student.Name is null);
-                            studentCommand.Parameters.AddWithValue("@Surname", student.Surname is null);
-                            studentCommand.Parameters.AddWithValue("@Age", student.Age is null);
-                            studentCommand.Parameters.AddWithValue("@DateCreated", student.DateCreated);
-                            studentCommand.Parameters.AddWithValue("@Id", student.Id);
-
-                            await studentCommand.ExecuteNonQueryAsync();
-                        }
-
-                        string deleteMajorsQuery = @"DELETE FROM StudentMajor WHERE StudentId = @StudentId";
-                        using (var deleteCommand = new NpgsqlCommand(deleteMajorsQuery, connection))
-                        {
-                            deleteCommand.Parameters.AddWithValue("@StudentId", student.Id);
-                            await deleteCommand.ExecuteNonQueryAsync();
-                        }
-
-                        await AddStudentMajorsAsync(student.Id, majorIds);
-
-                        await transaction.CommitAsync();
+                        command.Parameters.AddWithValue("@Name", student.Name is null);
+                        command.Parameters.AddWithValue("@Surname", student.Surname is null);
+                        command.Parameters.AddWithValue("@Age", student.Age is null);
+                        command.Parameters.AddWithValue("@DateCreated", student.DateCreated.HasValue ? (object)student.DateCreated.Value : DBNull.Value);
+                        command.Parameters.AddWithValue("@Id", student.Id);
+                        await command.ExecuteNonQueryAsync();
                     }
-                    catch (Exception)
+
+                    var deleteMajorsQuery = @"DELETE FROM StudentMajor WHERE StudentId = @StudentId";
+                    using (var deleteCommand = new NpgsqlCommand(deleteMajorsQuery, connection))
                     {
-                        await transaction.RollbackAsync();
-                        throw;
+                        deleteCommand.Parameters.AddWithValue("@StudentId", student.Id);
+                        await deleteCommand.ExecuteNonQueryAsync();
                     }
+
+                    await AddStudentMajorsAsync(student.Id, majorIds);
+
+                    await transaction.CommitAsync();
                 }
             }
         }
@@ -189,121 +116,95 @@ namespace Collage.Repository
                 await connection.OpenAsync();
                 using (var transaction = await connection.BeginTransactionAsync())
                 {
-                    try
+                    var deleteStudentMajorsQuery = @"DELETE FROM StudentMajor WHERE StudentId = @StudentId";
+                    using (var deleteCommand = new NpgsqlCommand(deleteStudentMajorsQuery, connection))
                     {
-                        string deleteStudentMajorsQuery = @"DELETE FROM StudentMajor WHERE StudentId = @StudentId";
-                        using (var deleteStudentMajorsCommand = new NpgsqlCommand(deleteStudentMajorsQuery, connection))
-                        {
-                            deleteStudentMajorsCommand.Parameters.AddWithValue("@StudentId", studentId);
-                            await deleteStudentMajorsCommand.ExecuteNonQueryAsync();
-                        }
-
-                        string deleteStudentQuery = @"DELETE FROM Student WHERE Id = @Id";
-                        using (var deleteStudentCommand = new NpgsqlCommand(deleteStudentQuery, connection))
-                        {
-                            deleteStudentCommand.Parameters.AddWithValue("@Id", studentId);
-                            await deleteStudentCommand.ExecuteNonQueryAsync();
-                        }
-
-                        await transaction.CommitAsync();
+                        deleteCommand.Parameters.AddWithValue("@StudentId", studentId);
+                        await deleteCommand.ExecuteNonQueryAsync();
                     }
-                    catch (Exception)
+
+                    var deleteStudentQuery = @"DELETE FROM Student WHERE Id = @Id";
+                    using (var deleteCommand = new NpgsqlCommand(deleteStudentQuery, connection))
                     {
-                        await transaction.RollbackAsync();
-                        throw;
+                        deleteCommand.Parameters.AddWithValue("@Id", studentId);
+                        await deleteCommand.ExecuteNonQueryAsync();
                     }
+
+                    await transaction.CommitAsync();
                 }
             }
         }
 
-        public async Task<IEnumerable<Student>> GetStudentsAsync(Filtering filtering, Sorting sorting, Paging paging)
+        public async Task AddStudentMajorsAsync(int studentId, int[] majorIds)
         {
             using (var connection = new NpgsqlConnection(_connectionString))
             {
                 await connection.OpenAsync();
 
-                var queryBuilder = new StringBuilder();
-                queryBuilder.AppendLine("SELECT s.Id, s.Name, s.Surname, s.Age, s.DateCreated");
-                queryBuilder.AppendLine("FROM Student s");
-                queryBuilder.AppendLine("WHERE 1=1");
-
-                if (filtering != null)
+                foreach (var majorId in majorIds)
                 {
-                    if (filtering.StudentId > 0)
+                    var query = @"INSERT INTO StudentMajor (StudentId, MajorId) 
+                                  VALUES (@StudentId, @MajorId)";
+                    using (var command = new NpgsqlCommand(query, connection))
                     {
-                        queryBuilder.AppendLine("AND s.Id = @StudentId");
-                    }
-                    if (!string.IsNullOrEmpty(filtering.SearchQery))
-                    {
-                        queryBuilder.AppendLine("AND (s.Name ILIKE @SearchQery OR s.Surname ILIKE @SearchQery)");
-                    }
-                    if (filtering.FromDate != DateTime.MinValue && filtering.ToDate != DateTime.MinValue)
-                    {
-                        queryBuilder.AppendLine("AND s.DateCreated BETWEEN @FromDate AND @ToDate");
+                        command.Parameters.AddWithValue("@StudentId", studentId);
+                        command.Parameters.AddWithValue("@MajorId", majorId);
+                        await command.ExecuteNonQueryAsync();
                     }
                 }
+            }
+        }
 
-                if (sorting != null)
-                {
-                    queryBuilder.AppendLine($"ORDER BY {sorting.OrderBy} {sorting.SortOrder}");
-                }
+        public async Task<List<Student>> GetStudentsAsync(Filtering filtering, Sorting sorting, Paging paging)
+        {
+            var students = new List<Student>();
+            using (var connection = new NpgsqlConnection(_connectionString))
+            {
+                await connection.OpenAsync();
 
-                if (paging != null)
-                {
-                    queryBuilder.AppendLine("LIMIT @RppPageSize OFFSET @Offset");
-                }
-
-                string query;
-                using (var reader = new StringReader(queryBuilder.ToString()))
-                {
-                    query = reader.ReadToEnd();
-                }
+                var query = @"SELECT Id, Name, Surname, Age, DateCreated 
+                              FROM Student 
+                              WHERE (@StudentId IS NULL OR Id = @StudentId)
+                              AND (@FromDate IS NULL OR DateCreated >= @FromDate)
+                              AND (@ToDate IS NULL OR DateCreated <= @ToDate)
+                              AND (@SearchQuery IS NULL OR (Name LIKE '%' || @SearchQuery || '%' OR Surname LIKE '%' || @SearchQuery || '%'))
+                              ORDER BY 
+                              CASE WHEN @OrderBy = 'Name' AND @SortOrder = 'asc' THEN Name END ASC,
+                              CASE WHEN @OrderBy = 'Name' AND @SortOrder = 'desc' THEN Name END DESC,
+                              CASE WHEN @OrderBy = 'DateCreated' AND @SortOrder = 'asc' THEN DateCreated END ASC,
+                              CASE WHEN @OrderBy = 'DateCreated' AND @SortOrder = 'desc' THEN DateCreated END DESC
+                              LIMIT @PageSize OFFSET @PageSize * (@PageNumber - 1)";
 
                 using (var command = new NpgsqlCommand(query, connection))
                 {
-                    if (filtering != null)
-                    {
-                        if (filtering.StudentId > 0)
-                        {
-                            command.Parameters.AddWithValue("@StudentId", filtering.StudentId);
-                        }
-                        if (!string.IsNullOrEmpty(filtering.SearchQery))
-                        {
-                            command.Parameters.AddWithValue("@SearchQery", $"%{filtering.SearchQery}%");
-                        }
-                        if (filtering.FromDate != DateTime.MinValue && filtering.ToDate != DateTime.MinValue)
-                        {
-                            command.Parameters.AddWithValue("@FromDate", filtering.FromDate is null);
-                            command.Parameters.AddWithValue("@ToDate", filtering.ToDate is null);
-                        }
-                    }
-
-                    if (paging != null)
-                    {
-                        command.Parameters.AddWithValue("@RppPageSize", paging.RppPageSize);
-                        command.Parameters.AddWithValue("@Offset", (paging.PageNumber - 1) * paging.RppPageSize);
-                    }
+                    command.Parameters.AddWithValue("@StudentId", filtering.StudentId == 0 ? (object)DBNull.Value : filtering.StudentId);
+                    command.Parameters.AddWithValue("@FromDate", filtering.FromDate ?? (object)DBNull.Value);
+                    command.Parameters.AddWithValue("@ToDate", filtering.ToDate ?? (object)DBNull.Value);
+                    command.Parameters.AddWithValue("@SearchQuery", filtering.SearchQuery ?? (object)DBNull.Value);
+                    command.Parameters.AddWithValue("@OrderBy", sorting.OrderBy ?? (object)DBNull.Value);
+                    command.Parameters.AddWithValue("@SortOrder", sorting.SortOrder ?? (object)DBNull.Value);
+                    command.Parameters.AddWithValue("@PageSize", paging.RppPageSize);
+                    command.Parameters.AddWithValue("@PageNumber", paging.PageNumber);
 
                     using (var reader = await command.ExecuteReaderAsync())
                     {
-                        var students = new List<Student>();
-
                         while (await reader.ReadAsync())
                         {
-                            students.Add(new Student
+                            var student = new Student
                             {
                                 Id = reader.GetInt32(0),
                                 Name = reader.GetString(1),
                                 Surname = reader.GetString(2),
                                 Age = reader.GetString(3),
                                 DateCreated = reader.GetDateTime(4)
-                            });
+                            };
+                            students.Add(student);
                         }
-
-                        return students;
                     }
                 }
             }
+
+            return students;
         }
     }
 }

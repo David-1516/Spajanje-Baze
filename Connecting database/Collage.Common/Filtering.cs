@@ -11,6 +11,6 @@ namespace Collage.Common
         public int  StudentId { get; set; }
         public DateTime? FromDate { get; set; }
         public DateTime? ToDate { get; set; }
-        public string? SearchQery { get; set; }
+        public string? SearchQuery { get; set; }
     }
 }

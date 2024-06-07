@@ -1,39 +1,44 @@
-using Autofac;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Collage.Repository;
-using Collage.Repository.Interface;
-using Collage.Service;
+using Microsoft.Extensions.Configuration;
+using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using Collage.Repository.Interface;
+using Collage.Repository;
+using Collage.Service;
+using AutoMapper;
 
 var builder = WebApplication.CreateBuilder(args);
 
 
 builder.Services.AddControllers();
-builder.Configuration.AddJsonFile("appsettings.json");
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddAutoMapper(typeof(Program).Assembly);
+
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
 
-
 builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
 {
-    containerBuilder.RegisterType<StudentRepository>().As<IStudentRepository>()
-        .WithParameter("connectionString", connectionString)
+
+    containerBuilder.RegisterInstance(connectionString).Named<string>("DefaultConnection");
+
+
+    containerBuilder.RegisterType<StudentRepository>()
+        .As<IStudentRepository>()
+        .WithParameter(new NamedParameter("connectionString", connectionString))
         .InstancePerLifetimeScope();
 
-    containerBuilder.RegisterType<StudentService>().InstancePerLifetimeScope();
+    containerBuilder.RegisterType<StudentService>().As<IStudentService>().InstancePerLifetimeScope();
 });
 
 var app = builder.Build();
-
 
 if (app.Environment.IsDevelopment())
 {
@@ -42,9 +47,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();
