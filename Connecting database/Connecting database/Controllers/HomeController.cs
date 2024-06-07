@@ -1,119 +1,86 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Collage.Service;
-using Connecting_database.Models;
-using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using Connecting_database.Models;
 using Collage.Common;
+using Collage.Service;
 
-namespace Connecting_database.Controllers
+namespace Collage.WebApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     public class HomeController : ControllerBase
     {
-        private readonly IConfiguration _configuration;
-        private readonly StudentService _studentService;
+        private readonly IStudentService _studentService;
 
-        public HomeController(IConfiguration configuration, StudentService studentService)
+        public HomeController(IStudentService studentService)
         {
-            _configuration = configuration;
             _studentService = studentService;
         }
 
-        [HttpPost]
-        [Route("CreateStudent")]
-        public async Task<IActionResult> CreateStudentAsync([FromBody] Student student, [FromQuery] int[] majorIds)
+        [HttpGet("students")]
+        public async Task<IActionResult> GetStudents([FromQuery] int studentId, [FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate, [FromQuery] string searchQuery, [FromQuery] string sortOrder, [FromQuery] string orderBy, [FromQuery] int pageNumber, [FromQuery] int pageSize)
         {
-            try
+            var filtering = new Filtering
             {
-                int studentId = await _studentService.CreateStudentAsync(student, majorIds);
-                return Ok("Student created successfully with ID: " + studentId);
-            }
-            catch (Exception ex)
+                StudentId = studentId,
+                FromDate = fromDate,
+                ToDate = toDate,
+                SearchQuery = searchQuery
+            };
+
+            var sorting = new Sorting
             {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+                SortOrder = sortOrder,
+                OrderBy = orderBy
+            };
+
+            var paging = new Paging
+            {
+                PageNumber = pageNumber,
+                RppPageSize = pageSize
+            };
+
+            var students = await _studentService.GetStudentsAsync(filtering, sorting, paging);
+            return Ok(students);
         }
 
-        [HttpGet]
-        [Route("GetStudent")]
-        public async Task<IActionResult> GetStudentAsync(int studentId)
+        [HttpPost("student")]
+        public async Task<IActionResult> CreateStudent([FromBody] Student student, [FromQuery] int[] majorIds)
         {
-            try
-            {
-                var student = await _studentService.GetStudentByIdAsync(studentId);
-                return Ok(student);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+            await _studentService.CreateStudentAsync(student, majorIds);
+            return CreatedAtAction(nameof(GetStudent), new { studentId = student.Id }, student);
         }
 
-        [HttpPut]
-        [Route("UpdateStudent")]
-        public async Task<IActionResult> UpdateStudentAsync([FromBody] Student student, [FromQuery] int[] majorIds)
+        [HttpGet("student/{studentId}")]
+        public async Task<IActionResult> GetStudent(int studentId)
         {
-            try
+            var student = await _studentService.GetStudentAsync(studentId);
+            if (student == null)
             {
-                await _studentService.UpdateStudentAsync(student, majorIds);
-                return Ok("Student updated successfully.");
+                return NotFound();
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+
+            return Ok(student);
         }
 
-        [HttpDelete]
-        [Route("DeleteStudent")]
-        public async Task<IActionResult> DeleteStudentAsync(int studentId)
+        [HttpPut("student/{studentId}")]
+        public async Task<IActionResult> UpdateStudent(int studentId, [FromBody] Student student, [FromQuery] int[] majorIds)
         {
-            try
+            if (studentId != student.Id)
             {
-                await _studentService.DeleteStudentAsync(studentId);
-                return Ok("Student deleted successfully.");
+                return BadRequest();
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+
+            await _studentService.UpdateStudentAsync(student, majorIds);
+            return NoContent();
         }
 
-        [HttpGet]
-        [Route("GetStudents")]
-        public async Task<IActionResult> GetStudents( [FromQuery] DateTime fromDate, [FromQuery] DateTime toDate, [FromQuery] int studentId = 1, [FromQuery] string searchQuery = "", [FromQuery] string sortOrder = "ASC", [FromQuery] string orderBy ="Newest", [FromQuery] int rppPageSize = 10, [FromQuery] int pageNumber = 1)
+        [HttpDelete("student/{studentId}")]
+        public async Task<IActionResult> DeleteStudent(int studentId)
         {
-            try
-            {
-                var filtering = new Filtering
-                {
-                    StudentId = studentId,
-                    FromDate = fromDate,
-                    ToDate = toDate,
-                    SearchQery = searchQuery
-                };
-
-                var sorting = new Sorting
-                {
-                    SortOrder = sortOrder,
-                    OrderBy = orderBy
-                };
-
-                var paging = new Paging
-                {
-                    RppPageSize = rppPageSize,
-                    PageNumber = pageNumber
-                };
-
-                var students = await _studentService.GetStudentsAsync(filtering, sorting, paging);
-                return Ok(students);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+            await _studentService.DeleteStudentAsync(studentId);
+            return NoContent();
         }
     }
 }

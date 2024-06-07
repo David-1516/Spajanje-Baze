@@ -1,15 +1,15 @@
 using Autofac;
+using Autofac.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Collage.Repository;
 using Collage.Repository.Interface;
+using Collage.Repository;
 using Collage.Service;
-using Autofac.Extensions.DependencyInjection;
+
 
 var builder = WebApplication.CreateBuilder(args);
-
 
 builder.Services.AddControllers();
 builder.Configuration.AddJsonFile("appsettings.json");
@@ -22,14 +22,14 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
 
-
 builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
 {
     containerBuilder.RegisterType<StudentRepository>().As<IStudentRepository>()
         .WithParameter("connectionString", connectionString)
         .InstancePerLifetimeScope();
 
-    containerBuilder.RegisterType<StudentService>().InstancePerLifetimeScope();
+    containerBuilder.RegisterType<StudentService>().As<IStudentService>()
+        .InstancePerLifetimeScope();
 });
 
 var app = builder.Build();

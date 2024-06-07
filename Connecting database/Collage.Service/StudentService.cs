@@ -1,12 +1,12 @@
-﻿using System;
+﻿using Collage.Repository.Interface;
+using Connecting_database.Models;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Collage.Common;
-using Collage.Repository.Interface;
-using Connecting_database.Models;
 
 namespace Collage.Service
 {
-    public class StudentService
+    public class StudentService : IStudentService
     {
         private readonly IStudentRepository _studentRepository;
 
@@ -15,14 +15,16 @@ namespace Collage.Service
             _studentRepository = studentRepository;
         }
 
-        public async Task<int> CreateStudentAsync(Student student, int[] majorIds)
+        public async Task CreateStudentAsync(Student student, int[] majorIds)
         {
-            int studentId = await _studentRepository.CreateStudentAsync(student);
-            await _studentRepository.AddStudentMajorsAsync(studentId, majorIds);
-            return studentId;
+            var studentId = await _studentRepository.CreateStudentAsync(student);
+            if (majorIds != null && majorIds.Length > 0)
+            {
+                await _studentRepository.AddStudentMajorsAsync(studentId, majorIds);
+            }
         }
 
-        public async Task<Student> GetStudentByIdAsync(int studentId)
+        public async Task<Student> GetStudentAsync(int studentId)
         {
             return await _studentRepository.GetStudentByIdAsync(studentId);
         }
@@ -36,7 +38,8 @@ namespace Collage.Service
         {
             await _studentRepository.DeleteStudentAsync(studentId);
         }
-        public async Task<IEnumerable<Student>> GetStudentsAsync(Filtering filtering, Sorting sorting, Paging paging)
+
+        public async Task<List<Student>> GetStudentsAsync(Filtering filtering, Sorting sorting, Paging paging)
         {
             return await _studentRepository.GetStudentsAsync(filtering, sorting, paging);
         }
