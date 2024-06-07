@@ -3,6 +3,7 @@ using Connecting_database.Models;
 using Connecting_database.RestModels;
 using Microsoft.AspNetCore.Mvc;
 using Collage.Service;
+using Collage.Common;
 
 namespace Connecting_database.Controllers
 {
@@ -56,6 +57,14 @@ namespace Connecting_database.Controllers
         {
             await _studentService.DeleteStudentAsync(studentId);
             return Ok("Student deleted successfully.");
+        }
+        [HttpGet]
+        [Route("GetStudents")]
+        public async Task<IActionResult> GetStudents([FromQuery] Filtering filtering, [FromQuery] Sorting sorting, [FromQuery] Paging paging)
+        {
+            var students = await _studentService.GetStudentsAsync(filtering, sorting, paging);
+            var studentDtos = _mapper.Map<List<StudentDto>>(students);
+            return Ok(studentDtos);
         }
     }
 }
